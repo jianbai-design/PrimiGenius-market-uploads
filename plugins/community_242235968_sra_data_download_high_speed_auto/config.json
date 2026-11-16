@@ -1,0 +1,240 @@
+{
+  "id": "community_242235968_sra_data_download_high_speed_auto",
+  "name": {
+    "zh": "SRA 高速下载（自动单双端）",
+    "en": "SRA High-Speed Download (Auto Layout)"
+  },
+  "description": {
+    "zh": "从 NCBI 官方 AWS 公共桶分片高速下载完整质量 SRA，逐个 accession 自动识别单端或双端，再用 fasterq-dump 与 pigz 生成并校验 FASTQ。插件自带离线运行环境，首次运行本地构建镜像，不依赖公共镜像站。",
+    "en": "Downloads full-quality SRA objects from the official NCBI AWS public bucket with resumable ranges, automatically detects SINGLE or PAIRED layout per accession, and creates verified FASTQ files with fasterq-dump and pigz. The bundled offline runtime builds locally on first use without a public container registry."
+  },
+  "type": "cli",
+  "category": {
+    "zh": "数据下载",
+    "en": "Data Download"
+  },
+  "docker_image": "localhost/primigenius/sra-fastq-auto:2.0.0",
+  "shell": "sh",
+  "local_binary": false,
+  "binary_name": "fasterq-dump",
+  "tool_version": "NCBI SRA Toolkit 3.4.1 / auto SINGLE-PAIRED / pigz 2.8",
+  "version_command": "fasterq-dump --version 2>&1 | head -n 1",
+  "execution_mode": "single",
+  "script": "scripts/run_s3_fastq.sh",
+  "layout": {
+    "default_columns": 4,
+    "default_gap": 12,
+    "row_groups": {
+      "input_row": {
+        "columns": 2,
+        "gap": 12
+      },
+      "transfer_row": {
+        "columns": 2,
+        "gap": 12
+      },
+      "validation_row": {
+        "columns": 2,
+        "gap": 12
+      }
+    }
+  },
+  "parameters": [
+    {
+      "id": "input_type",
+      "label": {
+        "zh": "输入方式",
+        "en": "Input Type"
+      },
+      "type": "select",
+      "default": "single",
+      "row_group": "input_row",
+      "options": [
+        {
+          "value": "single",
+          "label": {
+            "zh": "单个 accession",
+            "en": "Single accession"
+          }
+        },
+        {
+          "value": "multi_text",
+          "label": {
+            "zh": "文本批量输入",
+            "en": "Batch text"
+          }
+        },
+        {
+          "value": "list_file",
+          "label": {
+            "zh": "从文件读取列表",
+            "en": "Read accession list"
+          }
+        }
+      ]
+    },
+    {
+      "id": "accession",
+      "label": {
+        "zh": "Accession*",
+        "en": "Accession*"
+      },
+      "type": "text",
+      "required": true,
+      "default": "",
+      "row_group": "input_row",
+      "showWhen": {
+        "param": "input_type",
+        "op": "eq",
+        "value": "single"
+      },
+      "description": {
+        "zh": "例如 ERR1314950。",
+        "en": "For example, ERR1314950."
+      }
+    },
+    {
+      "id": "accession_text",
+      "label": {
+        "zh": "Accession 文本*",
+        "en": "Accession Text*"
+      },
+      "type": "textarea",
+      "required": true,
+      "default": "",
+      "row_group": "input_row",
+      "layout": {
+        "col_span": 1
+      },
+      "showWhen": {
+        "param": "input_type",
+        "op": "eq",
+        "value": "multi_text"
+      },
+      "description": {
+        "zh": "支持逗号、空格或换行分隔。",
+        "en": "Separate accessions with commas, spaces, or new lines."
+      }
+    },
+    {
+      "id": "accession_file",
+      "label": {
+        "zh": "Accession 列表文件*",
+        "en": "Accession List File*"
+      },
+      "type": "file",
+      "required": true,
+      "extensions": [
+        "txt",
+        "tsv",
+        "csv",
+        "list"
+      ],
+      "row_group": "input_row",
+      "layout": {
+        "col_span": 1
+      },
+      "showWhen": {
+        "param": "input_type",
+        "op": "eq",
+        "value": "list_file"
+      }
+    },
+    {
+      "id": "download_connections",
+      "label": {
+        "zh": "S3 分段连接数",
+        "en": "S3 Connections"
+      },
+      "type": "number",
+      "default": 8,
+      "min": 1,
+      "max": 16,
+      "row_group": "transfer_row",
+      "description": {
+        "zh": "同一 SRA 对象的固定分片并行连接数；高速通道默认 8，网络拥塞时可降为 4 或 2。",
+        "en": "Parallel fixed-range connections for one SRA object; the high-speed default is 8, or reduce to 4 or 2 on congested links."
+      }
+    },
+    {
+      "id": "threads",
+      "label": {
+        "zh": "转换/压缩线程",
+        "en": "Conversion/Compression Threads"
+      },
+      "type": "number",
+      "default": 12,
+      "min": 2,
+      "max": 32,
+      "row_group": "transfer_row",
+      "description": {
+        "zh": "供 fasterq-dump 和 pigz 使用；默认 12。",
+        "en": "Used by fasterq-dump and pigz; defaults to 12."
+      }
+    },
+    {
+      "id": "retry_count",
+      "label": {
+        "zh": "自动重试次数",
+        "en": "Retry Count"
+      },
+      "type": "number",
+      "default": 8,
+      "min": 1,
+      "max": 12,
+      "row_group": "validation_row",
+      "description": {
+        "zh": "每个固定分片独立重试并从已写入字节续传；完整性失败会清除错误分片。",
+        "en": "Each fixed range retries independently from its written bytes; integrity failures remove bad ranges."
+      }
+    },
+    {
+      "id": "keep_sra_cache",
+      "label": {
+        "zh": "保留已校验 SRA",
+        "en": "Keep Validated SRA"
+      },
+      "type": "checkbox",
+      "default": true,
+      "row_group": "validation_row",
+      "description": {
+        "zh": "默认保留已校验 SRA，并直接放在 .s3_sra_cache 根目录。",
+        "en": "Keep validated SRA files by default directly in the .s3_sra_cache root."
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "id": "fastq",
+      "label": {
+        "zh": "FASTQ 输出",
+        "en": "FASTQ Outputs"
+      },
+      "type": "fastq",
+      "file_pattern": ".*\\.fastq\\.gz$"
+    },
+    {
+      "id": "summary",
+      "label": {
+        "zh": "下载汇总",
+        "en": "Download Summary"
+      },
+      "type": "tsv",
+      "file_pattern": ".*s3_fastq_download_summary\\.tsv$"
+    }
+  ],
+  "command_template": "export input_type='{input_type}' accession='{accession}' accession_text='{accession_text}' accession_file={accession_file} download_connections='{download_connections}' threads='{threads}' retry_count='{retry_count}' keep_sra_cache='{keep_sra_cache}' output_dir='{output_dir}'; tr -d '\\r' < /scripts/scripts/run_s3_fastq.sh > /tmp/run_s3_fastq.sh && exec sh /tmp/run_s3_fastq.sh",
+  "version": "2.0.1",
+  "developer_signature": {
+    "developer": "XvZiQiang"
+  },
+  "marketplace": {
+    "source": "github:jianbai-design/PrimiGenius-community-plugins",
+    "owner_github_id": 242235968,
+    "owner_login": "XvZiQiang",
+    "submitted_by": {
+      "id": 242235968,
+      "login": "XvZiQiang"
+    }
+  }
+}
