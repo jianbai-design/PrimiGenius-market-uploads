@@ -1,0 +1,273 @@
+{
+  "schema": 1,
+  "plugin_id": "community_242235968_sra_data_download_high_speed_auto",
+  "original_id": "community_242235968_sra_data_download_high_speed_auto",
+  "version": "2.0.1",
+  "metadata": {
+    "binary_name": "fasterq-dump",
+    "category": {
+      "en": "Data Download",
+      "zh": "数据下载"
+    },
+    "command_template": "export input_type='{input_type}' accession='{accession}' accession_text='{accession_text}' accession_file={accession_file} download_connections='{download_connections}' threads='{threads}' retry_count='{retry_count}' keep_sra_cache='{keep_sra_cache}' output_dir='{output_dir}'; tr -d '\\r' < /scripts/scripts/run_s3_fastq.sh > /tmp/run_s3_fastq.sh && exec sh /tmp/run_s3_fastq.sh",
+    "description": {
+      "en": "Downloads full-quality SRA objects from the official NCBI AWS public bucket with resumable ranges, automatically detects SINGLE or PAIRED layout per accession, and creates verified FASTQ files with fasterq-dump and pigz. The bundled offline runtime builds locally on first use without a public container registry.",
+      "zh": "从 NCBI 官方 AWS 公共桶分片高速下载完整质量 SRA，逐个 accession 自动识别单端或双端，再用 fasterq-dump 与 pigz 生成并校验 FASTQ。插件自带离线运行环境，首次运行本地构建镜像，不依赖公共镜像站。"
+    },
+    "developer_signature": {
+      "developer": "XvZiQiang"
+    },
+    "docker_image": "localhost/primigenius/sra-fastq-auto:2.0.0",
+    "execution_mode": "single",
+    "id": "community_242235968_sra_data_download_high_speed_auto",
+    "layout": {
+      "default_columns": 4,
+      "default_gap": 12,
+      "row_groups": {
+        "input_row": {
+          "columns": 2,
+          "gap": 12
+        },
+        "transfer_row": {
+          "columns": 2,
+          "gap": 12
+        },
+        "validation_row": {
+          "columns": 2,
+          "gap": 12
+        }
+      }
+    },
+    "local_binary": false,
+    "marketplace": {
+      "owner_github_id": 242235968,
+      "owner_login": "XvZiQiang",
+      "source": "github:jianbai-design/PrimiGenius-community-plugins",
+      "submitted_by": {
+        "id": 242235968,
+        "login": "XvZiQiang"
+      }
+    },
+    "name": {
+      "en": "SRA High-Speed Download (Auto Layout)",
+      "zh": "SRA 高速下载（自动单双端）"
+    },
+    "outputs": [
+      {
+        "file_pattern": ".*\\.fastq\\.gz$",
+        "id": "fastq",
+        "label": {
+          "en": "FASTQ Outputs",
+          "zh": "FASTQ 输出"
+        },
+        "type": "fastq"
+      },
+      {
+        "file_pattern": ".*s3_fastq_download_summary\\.tsv$",
+        "id": "summary",
+        "label": {
+          "en": "Download Summary",
+          "zh": "下载汇总"
+        },
+        "type": "tsv"
+      }
+    ],
+    "parameters": [
+      {
+        "default": "single",
+        "id": "input_type",
+        "label": {
+          "en": "Input Type",
+          "zh": "输入方式"
+        },
+        "options": [
+          {
+            "label": {
+              "en": "Single accession",
+              "zh": "单个 accession"
+            },
+            "value": "single"
+          },
+          {
+            "label": {
+              "en": "Batch text",
+              "zh": "文本批量输入"
+            },
+            "value": "multi_text"
+          },
+          {
+            "label": {
+              "en": "Read accession list",
+              "zh": "从文件读取列表"
+            },
+            "value": "list_file"
+          }
+        ],
+        "row_group": "input_row",
+        "type": "select"
+      },
+      {
+        "default": "",
+        "description": {
+          "en": "For example, ERR1314950.",
+          "zh": "例如 ERR1314950。"
+        },
+        "id": "accession",
+        "label": {
+          "en": "Accession*",
+          "zh": "Accession*"
+        },
+        "required": true,
+        "row_group": "input_row",
+        "showWhen": {
+          "op": "eq",
+          "param": "input_type",
+          "value": "single"
+        },
+        "type": "text"
+      },
+      {
+        "default": "",
+        "description": {
+          "en": "Separate accessions with commas, spaces, or new lines.",
+          "zh": "支持逗号、空格或换行分隔。"
+        },
+        "id": "accession_text",
+        "label": {
+          "en": "Accession Text*",
+          "zh": "Accession 文本*"
+        },
+        "layout": {
+          "col_span": 1
+        },
+        "required": true,
+        "row_group": "input_row",
+        "showWhen": {
+          "op": "eq",
+          "param": "input_type",
+          "value": "multi_text"
+        },
+        "type": "textarea"
+      },
+      {
+        "extensions": [
+          "txt",
+          "tsv",
+          "csv",
+          "list"
+        ],
+        "id": "accession_file",
+        "label": {
+          "en": "Accession List File*",
+          "zh": "Accession 列表文件*"
+        },
+        "layout": {
+          "col_span": 1
+        },
+        "required": true,
+        "row_group": "input_row",
+        "showWhen": {
+          "op": "eq",
+          "param": "input_type",
+          "value": "list_file"
+        },
+        "type": "file"
+      },
+      {
+        "default": 8,
+        "description": {
+          "en": "Parallel fixed-range connections for one SRA object; the high-speed default is 8, or reduce to 4 or 2 on congested links.",
+          "zh": "同一 SRA 对象的固定分片并行连接数；高速通道默认 8，网络拥塞时可降为 4 或 2。"
+        },
+        "id": "download_connections",
+        "label": {
+          "en": "S3 Connections",
+          "zh": "S3 分段连接数"
+        },
+        "max": 16,
+        "min": 1,
+        "row_group": "transfer_row",
+        "type": "number"
+      },
+      {
+        "default": 12,
+        "description": {
+          "en": "Used by fasterq-dump and pigz; defaults to 12.",
+          "zh": "供 fasterq-dump 和 pigz 使用；默认 12。"
+        },
+        "id": "threads",
+        "label": {
+          "en": "Conversion/Compression Threads",
+          "zh": "转换/压缩线程"
+        },
+        "max": 32,
+        "min": 2,
+        "row_group": "transfer_row",
+        "type": "number"
+      },
+      {
+        "default": 8,
+        "description": {
+          "en": "Each fixed range retries independently from its written bytes; integrity failures remove bad ranges.",
+          "zh": "每个固定分片独立重试并从已写入字节续传；完整性失败会清除错误分片。"
+        },
+        "id": "retry_count",
+        "label": {
+          "en": "Retry Count",
+          "zh": "自动重试次数"
+        },
+        "max": 12,
+        "min": 1,
+        "row_group": "validation_row",
+        "type": "number"
+      },
+      {
+        "default": true,
+        "description": {
+          "en": "Keep validated SRA files by default directly in the .s3_sra_cache root.",
+          "zh": "默认保留已校验 SRA，并直接放在 .s3_sra_cache 根目录。"
+        },
+        "id": "keep_sra_cache",
+        "label": {
+          "en": "Keep Validated SRA",
+          "zh": "保留已校验 SRA"
+        },
+        "row_group": "validation_row",
+        "type": "checkbox"
+      }
+    ],
+    "script": "scripts/run_s3_fastq.sh",
+    "shell": "sh",
+    "tool_version": "NCBI SRA Toolkit 3.4.1 / auto SINGLE-PAIRED / pigz 2.8",
+    "type": "cli",
+    "version": "2.0.1",
+    "version_command": "fasterq-dump --version 2>&1 | head -n 1"
+  },
+  "owner": {
+    "id": 242235968,
+    "login": "XvZiQiang"
+  },
+  "submitted_by": {
+    "id": 134767426,
+    "login": "jianbai-design"
+  },
+  "changelog": "优化界面参数排版",
+  "sha256": "8a62ea755538c142ab5ab64085e8b5bd5c4bd9f75e07df991b93442c8beb7208",
+  "size": 48796574,
+  "source": {
+    "repository": "jianbai-design/PrimiGenius-market-uploads",
+    "release_id": 447004972,
+    "asset_id": 754755181,
+    "sha256": "8a62ea755538c142ab5ab64085e8b5bd5c4bd9f75e07df991b93442c8beb7208",
+    "commit": "715d723605f769d2aa43cc4694427102a1722ee5",
+    "path": "plugins/community_242235968_sra_data_download_high_speed_auto",
+    "index_sha": "7689e26ddd1959a3c7f1db727982a9753314e145",
+    "preview_path": ".primigenius-preview/community_242235968_sra_data_download_high_speed_auto"
+  },
+  "tag": "submission-22d8ca9822754b269b347b4fc5d6caae",
+  "review": {
+    "issue": 18,
+    "url": "https://github.com/jianbai-design/PrimiGenius-community-plugins/issues/18"
+  },
+  "submitted_at": "2026-11-16T12:22:31Z"
+}
