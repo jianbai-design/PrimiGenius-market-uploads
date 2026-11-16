@@ -1,1 +1,49 @@
-{"primigenius_market_uploads":1}
+{
+  "primigenius_market_uploads": 1,
+  "submissions": {
+    "submission-22d8ca9822754b269b347b4fc5d6caae": {
+      "schema": 1,
+      "plugin_id": "community_242235968_sra_data_download_high_speed_auto",
+      "original_id": "community_242235968_sra_data_download_high_speed_auto",
+      "version": "2.0.1",
+      "metadata": {
+        "name": {
+          "en": "SRA High-Speed Download (Auto Layout)",
+          "zh": "SRA 高速下载（自动单双端）"
+        },
+        "description": {
+          "en": "Downloads full-quality SRA objects from the official NCBI AWS public bucket with resumable ranges, automatically detects SINGLE or PAIRED layout per accession, and creates verified FASTQ files with fasterq-dump and pigz. The bundled offline runtime builds locally on first use without a public container registry.",
+          "zh": "从 NCBI 官方 AWS 公共桶分片高速下载完整质量 SRA，逐个 accession 自动识别单端或双端，再用 fasterq-dump 与 pigz 生成并校验 FASTQ。插件自带离线运行环境，首次运行本地构建镜像，不依赖公共镜像站。"
+        },
+        "type": "cli"
+      },
+      "owner": {
+        "id": 242235968,
+        "login": "XvZiQiang"
+      },
+      "submitted_by": {
+        "id": 134767426,
+        "login": "jianbai-design"
+      },
+      "changelog": "优化界面参数排版",
+      "sha256": "8a62ea755538c142ab5ab64085e8b5bd5c4bd9f75e07df991b93442c8beb7208",
+      "size": 48796574,
+      "source": {
+        "repository": "jianbai-design/PrimiGenius-market-uploads",
+        "release_id": 447004972,
+        "asset_id": 754755181,
+        "sha256": "8a62ea755538c142ab5ab64085e8b5bd5c4bd9f75e07df991b93442c8beb7208",
+        "commit": "715d723605f769d2aa43cc4694427102a1722ee5",
+        "path": "plugins/community_242235968_sra_data_download_high_speed_auto",
+        "index_sha": "7689e26ddd1959a3c7f1db727982a9753314e145",
+        "preview_path": ".primigenius-preview/community_242235968_sra_data_download_high_speed_auto"
+      },
+      "tag": "submission-22d8ca9822754b269b347b4fc5d6caae",
+      "review": {
+        "issue": 18,
+        "url": "https://github.com/jianbai-design/PrimiGenius-community-plugins/issues/18"
+      },
+      "submitted_at": "2026-11-16T12:22:31Z"
+    }
+  }
+}
